@@ -38,3 +38,18 @@ class TestPastCompetitions:
         response = client.get("/book/Fall%20Classic/Unknown%20Club")
         assert response.status_code == 302
         assert response.location.endswith("/")
+
+    def test_welcome_page_hides_booking_link_for_past_competition(self, client):
+        """Past competitions are listed but cannot be booked from welcome page."""
+        response = client.post("/showSummary", data={"email": "john@simplylift.co"})
+
+        assert response.status_code == 200
+        assert b"Spring Festival" in response.data
+        assert b"/book/Spring%20Festival/" not in response.data
+
+    def test_welcome_page_keeps_booking_link_for_future_competition(self, client):
+        """Future competitions still show a booking link on the welcome page."""
+        response = client.post("/showSummary", data={"email": "john@simplylift.co"})
+
+        assert response.status_code == 200
+        assert b"/book/Fall%20Classic/" in response.data

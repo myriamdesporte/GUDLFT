@@ -25,6 +25,12 @@ competitions = loadCompetitions()
 clubs = loadClubs()
 
 
+@app.context_processor
+def inject_now():
+    """Expose the current datetime as a string to all templates."""
+    return {"now": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
