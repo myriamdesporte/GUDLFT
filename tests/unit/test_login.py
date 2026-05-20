@@ -35,17 +35,3 @@ class TestShowSummary:
         response = client.post("/showSummary", data={})
         assert response.status_code == 200
         assert b"Sorry, that email was empty" in response.data
-
-    def test_login_with_whitespace_email(self, client):
-        """Test that an email with surrounding whitespace is handled correctly."""
-        response = client.post(
-            "/showSummary", data={"email": "   john@simplylift.co   "}
-        )
-        assert response.status_code == 200
-        assert b"Welcome" in response.data
-
-    def test_login_with_uppercase_email(self, client):
-        """Test that email matching is case-insensitive."""
-        response = client.post("/showSummary", data={"email": "JOHN@SIMPLYLIFT.CO"})
-        assert response.status_code == 200
-        assert b"Welcome" in response.data

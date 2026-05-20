@@ -1,6 +1,8 @@
 import json
 from flask import Flask, render_template, request, redirect, flash, url_for
 
+from helpers import find_club_by_email
+
 
 def loadClubs():
     with open("clubs.json") as c:
@@ -29,12 +31,13 @@ def index():
 @app.route("/showSummary", methods=["POST"])
 def showSummary():
     """Log in a club secretary by email and show the welcome page."""
-    email = request.form.get("email", "").strip().lower()
+    email = request.form.get("email", "").strip()
 
     if not email:
         flash("Sorry, that email was empty. Please try again.")
         return render_template("index.html")
-    club = next((club for club in clubs if club["email"].lower() == email), None)
+
+    club = find_club_by_email(clubs, email)
 
     if club is None:
         flash("Sorry, that email was not found. Please try again.")
