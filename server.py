@@ -1,7 +1,7 @@
 import json
 from flask import Flask, render_template, request, redirect, flash, url_for
 
-from helpers import find_club_by_email
+from helpers import find_club_by_email, find_competition, find_club
 
 
 def loadClubs():
@@ -62,10 +62,13 @@ def book(competition, club):
 @app.route("/purchasePlaces", methods=["POST"])
 def purchasePlaces():
     """Purchase places for a competition using club points."""
-    competition = [c for c in competitions if c["name"] == request.form["competition"]][
-        0
-    ]
-    club = [c for c in clubs if c["name"] == request.form["club"]][0]
+    competition = find_competition(competitions, request.form["competition"])
+    club = find_club(clubs, request.form["club"])
+
+    if competition is None or club is None:
+        flash("Something went wrong. Please try again")
+        return redirect(url_for("index"))
+
     placesRequired = int(request.form["places"])
     competition["numberOfPlaces"] = int(competition["numberOfPlaces"]) - placesRequired
     club["points"] = str(int(club["points"]) - placesRequired)

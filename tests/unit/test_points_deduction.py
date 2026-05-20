@@ -47,3 +47,31 @@ class TestPointsDeduction:
         )
 
         assert int(competition["numberOfPlaces"]) == initial_places - places_to_book
+
+    def test_purchase_unknown_competition_redirects_to_index(self, client):
+        """Posting an unknown competition name redirects to the login page."""
+        response = client.post(
+            "/purchasePlaces",
+            data={
+                "competition": "Unknown Competition",
+                "club": "Simply Lift",
+                "places": "1",
+            },
+        )
+
+        assert response.status_code == 302
+        assert response.location.endswith("/")
+
+    def test_purchase_unknown_club_redirects_to_index(self, client):
+        """Posting an unknown club name redirects to the login page."""
+        response = client.post(
+            "/purchasePlaces",
+            data={
+                "competition": "Fall Classic",
+                "club": "Unknown Club",
+                "places": "1",
+            },
+        )
+
+        assert response.status_code == 302
+        assert response.location.endswith("/")
