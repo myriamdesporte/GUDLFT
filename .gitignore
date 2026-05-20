@@ -5,3 +5,8 @@ lib
 tests/
 .envrc
 __pycache__
+.venv
+.DS_Store
+.idea/
+htmlcov/
+.coverage
