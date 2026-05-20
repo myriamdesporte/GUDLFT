@@ -28,7 +28,18 @@ def index():
 
 @app.route("/showSummary", methods=["POST"])
 def showSummary():
-    club = [club for club in clubs if club["email"] == request.form["email"]][0]
+    """Log in a club secretary by email and show the welcome page."""
+    email = request.form.get("email", "").strip().lower()
+
+    if not email:
+        flash("Sorry, that email was empty. Please try again.")
+        return render_template("index.html")
+    club = next((club for club in clubs if club["email"].lower() == email), None)
+
+    if club is None:
+        flash("Sorry, that email was not found. Please try again.")
+        return render_template("index.html")
+
     return render_template("welcome.html", club=club, competitions=competitions)
 
 
