@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+
 from flask import Flask, render_template, request, redirect, flash, url_for
 
 from helpers import find_club_by_email, find_competition, find_club
@@ -48,15 +50,21 @@ def showSummary():
 
 @app.route("/book/<competition>/<club>")
 def book(competition, club):
-    foundClub = [c for c in clubs if c["name"] == club][0]
-    foundCompetition = [c for c in competitions if c["name"] == competition][0]
-    if foundClub and foundCompetition:
+    """Display the booking form for a given competition and club."""
+    foundClub = find_club(clubs, club)
+    foundCompetition = find_competition(competitions, competition)
+
+    if foundClub is None or foundCompetition is None:
+        flash("Something went wrong. Please try again")
+        return redirect(url_for("index"))
+
+    competition_date = datetime.strptime(foundCompetition["date"], "%Y-%m-%d %H:%M:%S")
+    if competition_date < datetime.now():
+        flash("This competition has already taken place. You cannot book places.")
         return render_template(
-            "booking.html", club=foundClub, competition=foundCompetition
+            "welcome.html", club=foundClub, competitions=competitions
         )
-    else:
-        flash("Something went wrong-please try again")
-        return render_template("welcome.html", club=club, competitions=competitions)
+    return render_template("booking.html", club=foundClub, competition=foundCompetition)
 
 
 @app.route("/purchasePlaces", methods=["POST"])
