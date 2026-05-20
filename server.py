@@ -84,6 +84,11 @@ def purchasePlaces():
         return redirect(url_for("index"))
 
     placesRequired = int(request.form["places"])
+
+    if placesRequired > 12:
+        flash("Cannot book more than 12 places per competition.")
+        return render_template("welcome.html", club=club, competitions=competitions)
+
     if placesRequired > int(club["points"]):
         flash("Not enough points available.")
         return render_template("welcome.html", club=club, competitions=competitions)
