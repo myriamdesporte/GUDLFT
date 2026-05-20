@@ -7,7 +7,7 @@ from server import app
 @pytest.fixture
 def client():
     """Create a Flask test client."""
-    app.config['TESTING'] = True
+    app.config["TESTING"] = True
     with app.test_client() as client:
         yield client
 
@@ -26,6 +26,14 @@ def mock_clubs():
 def mock_competitions():
     """Return sample competition data for testing."""
     return [
-        {"name": "Spring Festival", "date": "2026-03-27 10:00:00", "numberOfPlaces": "25"},
-        {"name": "Fall Classic", "date": "2026-10-22 13:30:00", "numberOfPlaces": "13"},
+        {
+            "name": "Spring Festival",
+            "date": "2026-03-27 10:00:00",
+            "numberOfPlaces": "25",
+        },
+        {
+            "name": "Fall Classic",
+            "date": "2026-10-22 13:30:00",
+            "numberOfPlaces": "13",
+        },
     ]
