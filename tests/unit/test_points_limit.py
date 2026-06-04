@@ -55,3 +55,18 @@ class TestPointsLimit:
 
         assert response.status_code == 200
         assert b"/book/Fall%20Classic/" in response.data
+
+    def test_booking_is_limited_by_club_available_places(self, client):
+        """The booking form is limited to the number of club points allowed."""
+        # Iron Temple has 4 points, Fall Classic has 13 places
+        response = client.get("/book/Fall%20Classic/Iron%20Temple")
+
+        assert response.status_code == 200
+        assert b'max="4"' in response.data
+
+    def test_booking_input_min_is_zero(self, client):
+        """The booking form prevents negative numbers via the input min attribute."""
+        response = client.get("/book/Fall%20Classic/Iron%20Temple")
+
+        assert response.status_code == 200
+        assert b'min="0"' in response.data
