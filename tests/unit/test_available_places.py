@@ -35,3 +35,20 @@ class TestAvailablePlaces:
 
         assert response.status_code == 200
         assert b"Great-booking complete!" in response.data
+
+    def test_booking_input_max_is_capped_by_competition_places(
+        self, client, mock_competitions
+    ):
+        """
+        The booking form caps the maximum number of places at the minimum of
+        club points, competition places, and the hard limit of 12.
+        """
+        # Simply Lift has 13 points, so the cap from points is 12.
+        # Fall Classic is limited to 3 places, which becomes the effective max.
+        competition = next(c for c in mock_competitions if c["name"] == "Fall Classic")
+        competition["numberOfPlaces"] = "3"
+
+        response = client.get("/book/Fall%20Classic/Simply%20Lift")
+
+        assert response.status_code == 200
+        assert b'max="3"' in response.data
