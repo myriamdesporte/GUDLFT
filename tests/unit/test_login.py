@@ -35,3 +35,15 @@ class TestShowSummary:
         response = client.post("/showSummary", data={})
         assert response.status_code == 200
         assert b"Sorry, that email was empty" in response.data
+
+    def test_show_summary_get_with_valid_email(self, client):
+        """GET /showSummary with a valid email query param renders the welcome page."""
+        response = client.get("/showSummary?email=john@simplylift.co")
+        assert response.status_code == 200
+        assert b"Welcome" in response.data
+
+    def test_show_summary_get_without_email(self, client):
+        """GET /showSummary with no email shows the empty-email error."""
+        response = client.get("/showSummary")
+        assert response.status_code == 200
+        assert b"Sorry, that email was empty" in response.data

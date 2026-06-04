@@ -36,10 +36,10 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/showSummary", methods=["POST"])
+@app.route("/showSummary", methods=["POST", "GET"])
 def showSummary():
     """Log in a club secretary by email and show the welcome page."""
-    email = request.form.get("email", "").strip()
+    email = request.values.get("email", "").strip()
 
     if not email:
         flash("Sorry, that email was empty. Please try again.")
@@ -103,7 +103,15 @@ def purchasePlaces():
     return render_template("welcome.html", club=club, competitions=competitions)
 
 
-# TODO: Add route for points display
+@app.route("/points-board")
+def pointsBoard():
+    """Display a public board of all clubs and their current points."""
+    email = request.args.get("email", "")
+
+    connected_club = find_club_by_email(clubs, email) if email else None
+    return render_template(
+        "points_board.html", clubs=clubs, connected_club=connected_club
+    )
 
 
 @app.route("/logout")
