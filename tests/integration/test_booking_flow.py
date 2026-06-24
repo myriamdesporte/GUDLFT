@@ -5,8 +5,12 @@ import pytest
 import server
 
 
-class TestBookingFlow:
-    """End-to-end flows."""
+@pytest.mark.integration_test
+class TestCriticalBookingFlows:
+    """
+    Critical user flows that must work for the application to be usable at all.
+    A failure here means the core booking feature is broken.
+    """
 
     @pytest.fixture(autouse=True)
     def _mock_data(self, monkeypatch, mock_clubs, mock_competitions):
@@ -52,6 +56,29 @@ class TestBookingFlow:
         assert int(club["points"]) == initial_points - places_to_book
         assert int(competition["numberOfPlaces"]) == initial_places - places_to_book
 
+    def test_past_competition_cannot_be_booked_end_to_end(self, client):
+        """Hitting the past-competition URL directly is refused even though
+        the user is logged in."""
+        client.post("/showSummary", data={"email": "john@simplylift.co"})
+
+        response = client.get("/book/Spring%20Festival/Simply%20Lift")
+
+        assert response.status_code == 200
+        assert b"This competition has already taken place" in response.data
+
+
+@pytest.mark.slow_integration_test
+class TestSecondaryBookingFlows:
+    """
+    Secondary flows that improve the user experience but do not block the core
+    booking feature if they fail.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _mock_data(self, monkeypatch, mock_clubs, mock_competitions):
+        monkeypatch.setattr(server, "clubs", mock_clubs)
+        monkeypatch.setattr(server, "competitions", mock_competitions)
+
     def test_login_then_points_board_shows_updated_points(self, client, mock_clubs):
         """After a booking, the public points board reflects the new balance."""
         club = next(c for c in mock_clubs if c["name"] == "Simply Lift")
@@ -69,16 +96,6 @@ class TestBookingFlow:
         assert board_response.status_code == 200
         assert b"Simply Lift" in board_response.data
         assert club["points"].encode() in board_response.data
-
-    def test_past_competition_cannot_be_booked_end_to_end(self, client):
-        """Hitting the past-competition URL directly is refused even though
-        the user is logged in."""
-        client.post("/showSummary", data={"email": "john@simplylift.co"})
-
-        response = client.get("/book/Spring%20Festival/Simply%20Lift")
-
-        assert response.status_code == 200
-        assert b"This competition has already taken place" in response.data
 
     def test_failed_login_then_retry_succeeds(self, client):
         """A user mistyping their email gets a flash message and can retry."""
