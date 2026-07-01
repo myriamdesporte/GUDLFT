@@ -1,51 +1,140 @@
-# gudlift-registration
+# GUDLFT
 
-1. Why
+Plateforme de réservation de compétitions pour clubs de force, écrite en Flask.
 
+## 1. Présentation
 
-    This is a proof of concept (POC) project to show a light-weight version of our competition booking platform. The aim is the keep things as light as possible, and use feedback from the users to iterate.
-
-2. Getting Started
-
-    This project uses the following technologies:
-
-    * Python v3.x+
-
-    * [Flask](https://flask.palletsprojects.com/en/1.1.x/)
-
-        Whereas Django does a lot of things for us out of the box, Flask allows us to add only what we need. 
-     
-
-    * [Virtual environment](https://virtualenv.pypa.io/en/stable/installation.html)
-
-        This ensures you'll be able to install the correct packages without interfering with Python on your machine.
-
-        Before you begin, please ensure you have this installed globally. 
+GUDLFT Registration est une application permettant à un secrétaire de club de :
+- se connecter avec son adresse email ;
+- visualiser la liste des compétitions à venir ;
+- réserver des places en utilisant les points disponibles de son club ;
+- consulter publiquement le tableau des points de tous les clubs.
 
 
-3. Installation
+## 2. Technologies
 
-    - After cloning, change into the directory and type <code>virtualenv .</code>. This will then set up a a virtual python environment within that directory.
+- **[Python](https://www.python.org) 3.11.15**
+- **[Flask](https://flask.palletsprojects.com/)** - framework web léger
+- **[pytest](https://docs.pytest.org/)** - framework de tests
+- **[pytest-cov](https://pytest-cov.readthedocs.io/) / [coverage](https://coverage.readthedocs.io/)** - mesure de couverture
+- **[pytest-integration](https://pypi.org/project/pytest-integration/)** - classification des tests par criticité
+- **[Selenium](https://www.selenium.dev/)** - tests fonctionnels navigateur
+- **[Locust](https://locust.io/)** - tests de performance
 
-    - Next, type <code>source bin/activate</code>. You should see that your command prompt has changed to the name of the folder. This means that you can install packages in here without affecting affecting files outside. To deactivate, type <code>deactivate</code>
+## 3. Installation
 
-    - Rather than hunting around for the packages you need, you can install in one step. Type <code>pip install -r requirements.txt</code>. This will install all the packages listed in the respective file. If you install a package, make sure others know by updating the requirements.txt file. An easy way to do this is <code>pip freeze > requirements.txt</code>
+```bash
+git clone https://github.com/myriamdesporte/GUDLFT.git
+cd GUDLFT
 
-    - Flask requires that you set an environmental variable to the python file. However you do that, you'll want to set the file to be <code>server.py</code>. Check [here](https://flask.palletsprojects.com/en/1.1.x/quickstart/#a-minimal-application) for more details
+# Environnement virtuel
+python -m venv .venv
+source .venv/bin/activate          # macOS / Linux
+.venv\Scripts\activate           # Windows
 
-    - You should now be ready to test the application. In the directory, type either <code>flask run</code> or <code>python -m flask run</code>. The app should respond with an address you should be able to go to using your browser.
+# Dépendances
+pip install -r requirements.txt
+```
 
-4. Current Setup
+## 4. Lancer l'application
 
-    The app is powered by [JSON files](https://www.tutorialspoint.com/json/json_quick_guide.htm). This is to get around having a DB until we actually need one. The main ones are:
-     
-    * competitions.json - list of competitions
-    * clubs.json - list of clubs with relevant information. You can look here to see what email addresses the app will accept for login.
+```bash
+flask run
+```
 
-5. Testing
+L'application est alors accessible sur `http://127.0.0.1:5000/`.
 
-    You are free to use whatever testing framework you like-the main thing is that you can show what tests you are using.
+## 5. Lancer les tests
 
-    We also like to show how well we're testing, so there's a module called 
-    [coverage](https://coverage.readthedocs.io/en/coverage-5.1/) you should add to your project.
+Trois niveaux de tests cohabitent dans le projet :
 
+### 5.1 Tests unitaires et d'intégration (pytest)
+
+```bash
+# Tous les tests unitaires + intégration
+pytest
+pytest --with-integration --with-slow-integration
+
+# Avec couverture et rapport HTML détaillé
+pytest --cov=server --cov=helpers --cov-report=html tests/unit/ tests/helpers/
+# puis ouvrir htmlcov/index.html
+```
+
+**Couverture actuelle : 98 % global (`server.py` 97 %, `helpers.py` 100 %). 58 tests passent + 2 fonctionnels skippés par défaut.**
+
+### 5.2 Tests fonctionnels (Selenium)
+
+Les tests dans `tests/functional/` ouvrent un vrai navigateur et nécessitent un serveur Flask actif et ChromeDriver installé.
+
+```bash
+# Terminal 1 : lancer l'application
+flask run
+
+# Terminal 2 : lancer les tests fonctionnels
+pytest -m functional
+```
+
+Par défaut `pytest.ini` contient `addopts = -m "not functional"`, donc les tests fonctionnels 
+sont automatiquement skippés lors d'un `pytest` ordinaire. Pour les lancer, on passe explicitement `-m functional` qui prend le pas sur le filtre par défaut.
+
+### 5.3 Tests de performance (Locust)
+
+```bash
+# Terminal 1 : lancer l'application
+flask run
+
+# Terminal 2 : lancer Locust
+locust -f tests/performance/locustfile.py --host=http://127.0.0.1:5000
+
+# Ouvrir http://localhost:8089 et choisir le nombre d'utilisateurs + spawn rate
+```
+
+Trois scénarios : consultation du tableau public, login, et flux complet de réservation.
+
+## 6. Structure des branches
+
+Ce projet suit un git flow séquentiel : chaque correction de bug ou ajout de fonctionnalité a sa propre branche, créée depuis `QA` après que les fixes précédents y ont été mergés.
+
+| Branche                               | Rôle                                                                                        |
+|---------------------------------------|---------------------------------------------------------------------------------------------|
+| `master`                              | État d'origine du POC OpenClassrooms, intact                                                |
+| `QA`                                  | Branche d'intégration où chaque bug / feature est mergé. **Branche par défaut sur GitHub.** |
+| `bug/unknown-email-crashes-app`       | Bug #1 — Crash lors d'un login avec email inconnu                                           |
+| `bug/points-not-deducted`             | Bug #6 — Les points ne sont pas déduits après réservation                                   |
+| `bug/book-past-competitions`          | Bug #5 — Réservation possible sur des compétitions passées                                  |
+| `bug/use-more-points-than-allowed`    | Bug #2 — Un club peut réserver plus de places qu'il n'a de points                           |
+| `bug/book-more-than-12-places`        | Bug #4 — Un club peut réserver plus de 12 places à une compétition                          |
+| `bug/book-more-than-available-places` | Bug #282 — Réservation possible au-delà des places restantes                                |
+| `feature/points-display-board`        | Feature #7 — Tableau public des points par club                                             |
+|`test/add-integration-functional-performance-tests`| Branche de tests intégration, fonctionnels et performance                                   |
+
+## 7. Architecture du code
+
+`server.py` expose les routes Flask et importe trois helpers de recherche depuis `helpers.py` :
+
+- `find_club_by_email(clubs, email)` - recherche d'un club par email (case-insensitive, tolère les espaces)
+- `find_club(clubs, name)` - recherche d'un club par son nom
+- `find_competition(competitions, name)` - recherche d'une compétition par son nom
+
+Toutes ces helpers sont des fonctions **pures** : elles reçoivent la collection en argument et renvoient `None` si rien ne correspond. Elles sont testées indépendamment dans `tests/unit/test_helpers.py` (couverture 100 %).
+
+Un context processor `inject_now` rend la date courante disponible dans tous les templates, ce qui permet à `welcome.html` de masquer le lien de réservation des compétitions passées.
+
+## 8. Tests unitaires
+
+Les tests unitaires vivent dans `tests/unit/` et utilisent :
+
+- la fixture **`monkeypatch`** native de pytest, via une fixture **`autouse=True`** par classe de test, pour remplacer `server.clubs` et `server.competitions` par les fausses données ;
+- les fixtures partagées **`mock_clubs`** et **`mock_competitions`** définies dans `tests/conftest.py`.
+
+Conséquence : chaque test est isolé du fichier `competitions.json` réel, et la suite reste déterministe quelles que soient les modifications des données de production.
+
+## 9. Données
+
+`competitions.json` contient deux compétitions :
+- **Spring Festival** (2026-03-27) - Date passée par rapport à aujourd'hui
+- **Fall Classic** (2026-10-22) - Date à venir
+
+Cette configuration permet à l'application d'illustrer immédiatement le filtrage des compétitions passées.
+
+`clubs.json` contient trois clubs : `Simply Lift`, `Iron Temple`, `She Lifts`, avec des emails respectifs `john@simplylift.co`, `admin@irontemple.com`, `kate@shelifts.co.uk`.
